@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💕 Nosso Contador</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS — CSS CUSTOM PROPERTIES
+    ============================================================ */
+    :root {
+      /* Paleta pastel */
+      --rose:         #FF8FAB;
+      --blush:        #FFC2D4;
+      --deep-rose:    #FF4D6D;
+      --lavender:     #CDB4DB;
+      --lavender-lt:  #E8D5F5;
+      --cream:        #FFF0F3;
+      --text-dark:    #4A2040;
+      --text-soft:    #9B6080;
+
+      /* Glassmorphism */
+      --glass-bg:     rgba(255, 255, 255, 0.38);
+      --glass-border: rgba(255, 255, 255, 0.68);
+      --glass-blur:   blur(24px);
+
+      /* Sombras suaves */
+      --shadow-card:  0 24px 64px rgba(205, 100, 140, 0.22),
+                      0 8px 24px rgba(255, 143, 171, 0.18);
+      --shadow-box:   0 4px 16px rgba(255, 100, 130, 0.14),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+      /* Radii */
+      --r-lg:   28px;
+      --r-md:   18px;
+      --r-pill: 100px;
+    }
+
+    /* ============================================================
+       RESET BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ============================================================
+       FUNDO — GRADIENT MESH (multicamadas)
+    ============================================================ */
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-color: #FFE8EF;
+      background-image:
+        radial-gradient(ellipse 90% 80% at 12%  8%,  rgba(255, 194, 212, 0.88) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 70% at 88%  14%, rgba(205, 180, 219, 0.72) 0%, transparent 55%),
+        radial-gradient(ellipse 80% 60% at 50%  96%, rgba(255, 143, 171, 0.62) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 94%  74%, rgba(255, 220, 235, 0.75) 0%, transparent 50%),
+        radial-gradient(ellipse 65% 75% at  6%  82%, rgba(232, 213, 245, 0.66) 0%, transparent 55%);
+    }
+
+    /* ============================================================
+       CORAÇÕES FLUTUANTES — DECORAÇÃO DE FUNDO
+    ============================================================ */
+    .hearts {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .h {
+      position: absolute;
+      font-size: var(--s, 1.4rem);
+      opacity: 0;
+      animation: rise var(--d, 10s) var(--del, 0s) ease-in-out infinite;
+      filter: drop-shadow(0 2px 6px rgba(255, 80, 120, 0.22));
+    }
+
+    @keyframes rise {
+      0%   { opacity: 0;    transform: translateY(108vh) rotate(var(--r, 0deg))               scale(0.55); }
+      12%  { opacity: 0.82; }
+      88%  { opacity: 0.5;  }
+      100% { opacity: 0;    transform: translateY(-12vh)  rotate(calc(var(--r, 0deg) + 30deg)) scale(1.08); }
+    }
+
+    /* ============================================================
+       CARD PRINCIPAL — GLASSMORPHISM
+    ============================================================ */
+    .card {
+      position: relative;
+      z-index: 10;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1.5px solid var(--glass-border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card);
+      padding: clamp(1.75rem, 5vw, 2.8rem) clamp(1.4rem, 5vw, 2.6rem);
+      max-width: 510px;
+      width: 100%;
+      text-align: center;
+      animation: appear 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    /* Linha decorativa no topo do card */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 14%; right: 14%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--rose), var(--lavender), var(--rose), transparent);
+      border-radius: var(--r-pill);
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: scale(0.87) translateY(26px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0);    }
+    }
+
+    /* ============================================================
+       CABEÇALHO
+    ============================================================ */
+    header { margin-bottom: 0.2rem; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: linear-gradient(135deg, var(--rose), var(--lavender));
+      color: #fff;
+      font-size: 0.63rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 0.28em 0.95em;
+      border-radius: var(--r-pill);
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 12px rgba(255, 100, 130, 0.3);
+    }
+
+    h1.title {
+      font-size: clamp(1.3rem, 4.5vw, 1.95rem);
+      font-weight: 900;
+      color: var(--text-dark);
+      line-height: 1.15;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       PERSONAGENS — PANDA E GUAXINIM
+    ============================================================ */
+    .chars {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      margin: 1.55rem 0 1.45rem;
+    }
+
+    .char {
+      font-size: clamp(3.2rem, 10vw, 4.8rem);
+      display: inline-block;
+      filter: drop-shadow(0 8px 18px rgba(255, 80, 110, 0.28));
+      animation: bob 3.2s ease-in-out infinite;
+    }
+
+    .char--raccoon { animation-delay: 0.65s; }
+
+    .heart-mid {
+      font-size: clamp(1.35rem, 4.5vw, 2rem);
+      display: inline-block;
+      animation: throb 1.6s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0)    rotate(-4deg); }
+      50%       { transform: translateY(-12px) rotate(4deg); }
+    }
+
+    @keyframes throb {
+      0%, 100% { transform: scale(1);    }
+      50%       { transform: scale(1.35); filter: drop-shadow(0 0 10px rgba(255, 50, 90, 0.5)); }
+    }
+
+    /* ============================================================
+       SEÇÃO DO CONTADOR — BLOCOS NUMÉRICOS
+    ============================================================ */
+    .counter-section { margin-bottom: 1.4rem; }
+
+    .counter-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-soft);
+      margin-bottom: 0.8rem;
+    }
+
+    .boxes {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .box {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.93), rgba(255, 240, 245, 0.76));
+      border: 1.5px solid rgba(255, 255, 255, 0.86);
+      border-radius: var(--r-md);
+      padding: 0.55rem 0.72rem;
+      min-width: clamp(60px, 17vw, 82px);
+      box-shadow: var(--shadow-box);
+      transition: transform 0.28s ease;
+    }
+
+    .box:hover { transform: translateY(-3px) scale(1.02); }
+
+    /* Número com gradiente de cor */
+    .num {
+      display: block;
+      font-size: clamp(1.85rem, 5.5vw, 2.9rem);
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--deep-rose) 0%, var(--lavender) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .lbl {
+      font-size: clamp(0.57rem, 1.6vw, 0.69rem);
+      font-weight: 800;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .sep {
+      font-size: 1.65rem;
+      font-weight: 900;
+      color: var(--rose);
+      opacity: 0.5;
+      margin-bottom: 0.55rem;
+      user-select: none;
+    }
+
+    /* Animação de troca de número */
+    @keyframes pop {
+      0%   { transform: scale(0.6);  opacity: 0.45; }
+      100% { transform: scale(1);    opacity: 1;    }
+    }
+    .num.pop { animation: pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    /* ============================================================
+       FRASE DESCRITIVA COMPLETA
+    ============================================================ */
+    .phrase {
+      background: linear-gradient(135deg, rgba(255, 194, 212, 0.22), rgba(205, 180, 219, 0.22));
+      border: 1px solid rgba(255, 183, 197, 0.42);
+      border-radius: var(--r-md);
+      padding: 0.9rem 1.1rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .phrase p {
+      font-size: clamp(0.82rem, 2.4vw, 0.96rem);
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.58;
+    }
+
+    /* Destaque para os valores dentro da frase */
+    .hi {
+      color: var(--deep-rose);
+      font-weight: 900;
+    }
+
+    /* ============================================================
+       DATA DE INÍCIO
+    ============================================================ */
+    .since {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: var(--text-soft);
+      margin-bottom: 1.4rem;
+    }
+
+    .since::before,
+    .since::after {
+      content: '';
+      flex: 1;
+      max-width: 55px;
+      height: 1px;
+    }
+
+    .since::before { background: linear-gradient(90deg,  transparent, rgba(255, 100, 130, 0.28)); }
+    .since::after  { background: linear-gradient(270deg, transparent, rgba(255, 100, 130, 0.28)); }
+
+    /* ============================================================
+       BOTÃO DE RESET
+    ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.72rem 1.55rem;
+      border-radius: var(--r-pill);
+      border: 1.5px solid rgba(255, 143, 171, 0.46);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(255, 240, 246, 0.42));
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text-soft);
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(255, 100, 130, 0.1);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      letter-spacing: 0.01em;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, rgba(255, 77, 109, 0.1), rgba(205, 180, 219, 0.22));
+      border-color: var(--rose);
+      color: var(--deep-rose);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(255, 100, 130, 0.22);
+    }
+
+    .btn:active { transform: scale(0.97) translateY(0); }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--deep-rose);
+      outline-offset: 3px;
+    }
+
+    /* ============================================================
+       RESPONSIVIDADE — MOBILE FIRST
+    ============================================================ */
+    @media (max-width: 380px) {
+      .card  { padding: 1.5rem 1.1rem; }
+      .boxes { gap: 0.35rem; }
+      .sep   { font-size: 1.3rem; }
+    }
+
+    /* ============================================================
+       ACESSIBILIDADE — RESPEITA PREFERÊNCIA DE MOVIMENTO REDUZIDO
+    ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      .char, .heart-mid, .h, .card { animation: none !important; }
+      .num.pop                      { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fundo decorativo com gradient mesh -->
+  <div class="bg" aria-hidden="true"></div>
+
+  <!-- Container dos corações flutuantes (gerados via JS) -->
+  <div class="hearts" aria-hidden="true" id="heartsWrap"></div>
+
+  <!-- ============================================================
+       CARD PRINCIPAL
+  ============================================================ -->
+  <main class="card" role="main">
+
+    <!-- Cabeçalho -->
+    <header>
+      <div class="badge" aria-hidden="true">✨ Nosso amor ✨</div>
+      <h1 class="title">Contador do Amor 💕</h1>
+      <p class="subtitle">Guardando cada momento juntos</p>
+    </header>
+
+    <!-- Personagens: Panda e Guaxinim interagindo -->
+    <div class="chars" aria-label="Panda e Guaxinim apaixonados">
+      <span class="char char--panda"   role="img" aria-label="Panda">🐼</span>
+      <span class="heart-mid"          role="img" aria-label="Coração">❤️</span>
+      <span class="char char--raccoon" role="img" aria-label="Guaxinim">🦝</span>
+    </div>
+
+    <!-- Contador numérico (dias · horas · minutos) -->
+    <section class="counter-section" aria-label="Tempo juntos sem erros">
+      <!-- Frase dinâmica dos dias consecutivos -->
+      <p class="counter-eyebrow" id="eyebrowDays">Estamos acertando há 0 dias consecutivos.</p>
+
+      <div class="boxes" role="timer" aria-live="polite" aria-atomic="true">
+
+        <div class="unit">
+          <div class="box">
+            <span class="num" id="nDays">0</span>
+          </div>
+          <span class="lbl" id="lDays">dias</span>
+        </div>
+
+        <span class="sep" aria-hidden="true">·</span>
+
+        <div class="unit">
+          <div class="box">
+            <span class="num" id="nHours">00</span>
+          </div>
+          <span class="lbl" id="lHours">horas</span>
+        </div>
+
+        <span class="sep" aria-hidden="true">·</span>
+
+        <div class="unit">
+          <div class="box">
+            <span class="num" id="nMins">00</span>
+          </div>
+          <span class="lbl" id="lMins">minutos</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Frase descritiva completa com destaque nos valores -->
+    <div class="phrase" role="status" aria-live="polite">
+      <p id="phraseEl">Calculando o nosso tempo juntos...</p>
+    </div>
+
+    <!-- Exibição da data de início -->
+    <p class="since" id="sinceEl">Desde 02/06/2026</p>
+
+    <!-- Botão de reset: zera o contador com confirmação -->
+    <button class="btn" id="btnReset" type="button"
+            aria-label="Zerar contador — clique se aconteceu um erro">
+      Ops, aconteceu um erro 💔
+    </button>
+
+  </main>
+
+  <!-- ============================================================
+       JAVASCRIPT — LÓGICA DA APLICAÇÃO
+  ============================================================ -->
+  <script>
+    /* ----------------------------------------------------------
+       CONSTANTES E REFERÊNCIAS DO DOM
+    ---------------------------------------------------------- */
+    const LS_KEY      = 'amor_inicio';
+    const DEFAULT_ISO = '2026-06-02T00:00:00'; // data padrão (hora local)
+
+    const nDays       = document.getElementById('nDays');
+    const nHours      = document.getElementById('nHours');
+    const nMins       = document.getElementById('nMins');
+    const lDays       = document.getElementById('lDays');
+    const lHours      = document.getElementById('lHours');
+    const lMins       = document.getElementById('lMins');
+    const phraseEl    = document.getElementById('phraseEl');
+    const sinceEl     = document.getElementById('sinceEl');
+    const btnReset    = document.getElementById('btnReset');
+    // Nova referência para o texto dos dias consecutivos
+    const eyebrowDays = document.getElementById('eyebrowDays');
+
+    /* ----------------------------------------------------------
+       PLURALIZAÇÃO EM PT-BR
+       Retorna o singular se n === 1, plural nos demais casos.
+    ---------------------------------------------------------- */
+    const plural = (n, singular, pluralForm) => (n === 1 ? singular : pluralForm);
+
+    /* ----------------------------------------------------------
+       FORMATAR DATA PARA EXIBIÇÃO AMIGÁVEL (DD/MM/AAAA)
+    ---------------------------------------------------------- */
+    function fmtDate(iso) {
+      const d  = new Date(iso);
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      return `${dd}/${mm}/${d.getFullYear()}`;
+    }
+
+    /* ----------------------------------------------------------
+       CALCULAR DIFERENÇA TEMPORAL
+       Retorna { days, hours, mins } entre startIso e agora.
+       Garante que nunca retorna valores negativos (Math.max).
+    ---------------------------------------------------------- */
+    function calcDiff(iso) {
+      const elapsed = Math.max(0, Date.now() - new Date(iso).getTime());
+      const days    = Math.floor(elapsed / 86_400_000);
+      const hours   = Math.floor(elapsed / 3_600_000) % 24;
+      const mins    = Math.floor(elapsed / 60_000)    % 60;
+      return { days, hours, mins };
+    }
+
+    /* ----------------------------------------------------------
+       ANIMAR TROCA DE NÚMERO
+       Só anima se o valor realmente mudou; força reflow para
+       reiniciar a animação CSS corretamente.
+    ---------------------------------------------------------- */
+    function animNum(el, val) {
+      const txt = String(val);
+      if (el.textContent === txt) return; // sem mudança, sem animação
+      el.textContent = txt;
+      el.classList.remove('pop');
+      void el.offsetWidth;    // força reflow do browser
+      el.classList.add('pop');
+    }
+
+    /* ----------------------------------------------------------
+       RENDERIZAR / ATUALIZAR O DOM
+       Atualiza números, labels, frase dos dias consecutivos
+       e frase completa de uma vez.
+    ---------------------------------------------------------- */
+    function render(iso) {
+      const { days, hours, mins } = calcDiff(iso);
+
+      // Números: horas e minutos com zero à esquerda (00–23, 00–59)
+      animNum(nDays,  days);
+      animNum(nHours, String(hours).padStart(2, '0'));
+      animNum(nMins,  String(mins).padStart(2, '0'));
+
+      // Labels com pluralização correta em PT-BR
+      lDays.textContent  = plural(days,  'dia',    'dias');
+      lHours.textContent = plural(hours, 'hora',   'horas');
+      lMins.textContent  = plural(mins,  'minuto', 'minutos');
+
+      // Atualiza a frase "Estamos acertando há X dias consecutivos."
+      eyebrowDays.textContent = `Estamos acertando há ${days} ${plural(days, 'dia', 'dias')} consecutivos.`;
+
+      // Monta a frase completa com destaques HTML
+      const dStr = `${days}  ${plural(days,  'dia',    'dias')}`;
+      const hStr = `${hours} ${plural(hours, 'hora',   'horas')}`;
+      const mStr = `${mins}  ${plural(mins,  'minuto', 'minutos')}`;
+
+      phraseEl.innerHTML =
+        `Estamos há <span class="hi">${dStr.trim()}</span>, ` +
+        `<span class="hi">${hStr.trim()}</span> e ` +
+        `<span class="hi">${mStr.trim()}</span> sem erros 💕`;
+    }
+
+    /* ----------------------------------------------------------
+       CARREGAR DATA DO localStorage
+       Se não houver data salva (primeiro acesso), define e salva
+       a data padrão no localStorage.
+    ---------------------------------------------------------- */
+    function loadDate() {
+      let iso = localStorage.getItem(LS_KEY);
+      if (!iso) {
+        iso = DEFAULT_ISO;
+        localStorage.setItem(LS_KEY, iso);
+      }
+      return iso;
+    }
+
+    /* ----------------------------------------------------------
+       HANDLER DE RESET
+       Exibe confirmação nativa; se confirmado, salva a data/hora
+       atual no localStorage e re-renderiza o DOM imediatamente
+       (comportamento SPA — sem reload de página).
+    ---------------------------------------------------------- */
+    function onReset() {
+      if (!confirm('Tem certeza que deseja zerar nosso contador? 🥺')) return;
+
+      const iso = new Date().toISOString();
+      localStorage.setItem(LS_KEY, iso);
+      sinceEl.textContent = `Desde ${fmtDate(iso)}`;
+      render(iso);
+    }
+
+    /* ----------------------------------------------------------
+       GERAR CORAÇÕES FLUTUANTES
+       Cria N spans com variáveis CSS aleatórias para posição,
+       tamanho, duração e delay da animação.
+    ---------------------------------------------------------- */
+    function spawnHearts() {
+      const wrap   = document.getElementById('heartsWrap');
+      const emojis = ['❤️', '🩷', '💕', '💗', '💖', '💝', '🌸', '🤍', '💞'];
+      const COUNT  = 22;
+
+      for (let i = 0; i < COUNT; i++) {
+        const el = document.createElement('span');
+        el.className   = 'h';
+        el.textContent = emojis[i % emojis.length];
+
+        // Cada coração tem posição, tamanho e timing únicos
+        el.style.cssText = [
+          `left:${(Math.random() * 96).toFixed(1)}%`,
+          `--s:${(0.85 + Math.random() * 1.55).toFixed(2)}rem`,
+          `--d:${(8    + Math.random() * 9).toFixed(1)}s`,
+          `--del:${(Math.random() * 14).toFixed(1)}s`,
+          `--r:${(Math.random() * 40 - 20).toFixed(0)}deg`,
+        ].join(';');
+
+        wrap.appendChild(el);
+      }
+    }
+
+    /* ----------------------------------------------------------
+       INICIALIZAÇÃO — PONTO DE ENTRADA
+    ---------------------------------------------------------- */
+    (function init() {
+      // 1. Gera os corações decorativos de fundo
+      spawnHearts();
+
+      // 2. Carrega (ou define) a data de início
+      const iso = loadDate();
+
+      // 3. Exibe a data de início formatada
+      sinceEl.textContent = `Desde ${fmtDate(iso)}`;
+
+      // 4. Primeira renderização do contador (já atualiza a frase dos dias)
+      render(iso);
+
+      // 5. Atualiza a cada minuto (60.000 ms)
+      setInterval(() => {
+        render(localStorage.getItem(LS_KEY) || DEFAULT_ISO);
+      }, 60_000);
+
+      // 6. Registra o listener do botão de reset
+      btnReset.addEventListener('click', onReset);
+    })();
+  </script>
+
+</body>
+</html>
